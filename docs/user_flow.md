@@ -17,3 +17,6 @@ The payment is processed through the system. Once the payment is successful, the
 8. Order Confirmation
 The system generates an order record and sends confirmation to the user. The user can also view their order history.
 
+## User Flow Diagram
+
+![User Flow](User_Flow_Diagram.png)

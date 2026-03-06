@@ -37,3 +37,7 @@ Key responsibilities:
 •	Storing order and payment records
 •	Maintaining product reviews and ratings
 MongoDB provides flexible schema design which allows efficient handling of e-commerce data.
+
+## Technical Architecture Diagram
+
+![Technical Architecture](Technical Architcture Diagram.png)

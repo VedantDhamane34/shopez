@@ -79,3 +79,7 @@ Attributes:
 •	paymentDate
 •	transactionId
 
+## ER Diagram
+
+![ER Diagram](ER_diagram.png)
+
