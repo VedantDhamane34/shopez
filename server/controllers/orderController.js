@@ -1,34 +1,35 @@
-import { Orders } from '../models/Schema.js';
+import { Order, OrderItem, Payment } from '../models/Schema.js';
 
-// @desc    Place a new order
-// @route   POST /api/orders
-// @access  Private
+// @route POST /api/orders
 const placeOrder = async (req, res) => {
   try {
-    const {
-      name, email, mobile, address, pincode,
-      title, description, mainImg, size, quantity,
-      price, discount, paymentMethod, orderDate, deliveryDate,
-    } = req.body;
+    const { totalPrice, paymentMethod, items } = req.body;
 
-    const order = await Orders.create({
+    // Create order
+    const order = await Order.create({
       userId: req.user.id,
-      name,
-      email,
-      mobile,
-      address,
-      pincode,
-      title,
-      description,
-      mainImg,
-      size,
-      quantity,
-      price,
-      discount,
-      paymentMethod,
-      orderDate,
-      deliveryDate,
-      orderStatus: 'order placed',
+      totalPrice,
+      orderStatus:   'order placed',
+      paymentStatus: 'pending'
+    });
+
+    // Create order items
+    if (items && items.length > 0) {
+      const orderItems = items.map(item => ({
+        orderId:   order._id,
+        productId: item.productId,
+        rating:    0,
+        comment:   ''
+      }));
+      await OrderItem.insertMany(orderItems);
+    }
+
+    // Create payment record
+    await Payment.create({
+      orderId:       order._id,
+      paymentMethod: paymentMethod || 'COD',
+      paymentStatus: 'pending',
+      paymentDate:   new Date()
     });
 
     res.status(201).json(order);
@@ -37,52 +38,43 @@ const placeOrder = async (req, res) => {
   }
 };
 
-// @desc    Get orders of the logged-in user
-// @route   GET /api/orders/myorders
-// @access  Private
+// @route GET /api/orders/myorders
 const getMyOrders = async (req, res) => {
   try {
-    const orders = await Orders.find({ userId: req.user.id });
+    const orders = await Order.find({ userId: req.user.id });
     res.json(orders);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Get all orders (Admin only)
-// @route   GET /api/orders
-// @access  Private/Admin
+// @route GET /api/orders (Admin)
 const getAllOrders = async (req, res) => {
   try {
-    const orders = await Orders.find({});
+    const orders = await Order.find({}).populate('userId', 'name email');
     res.json(orders);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Update order status (Admin only)
-// @route   PUT /api/orders/:id/status
-// @access  Private/Admin
+// @route PUT /api/orders/:id/status (Admin)
 const updateOrderStatus = async (req, res) => {
   try {
-    const order = await Orders.findById(req.params.id);
+    const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Order not found' });
-
     order.orderStatus = req.body.orderStatus || order.orderStatus;
-    const updatedOrder = await order.save();
-    res.json(updatedOrder);
+    const updated = await order.save();
+    res.json(updated);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Delete an order
-// @route   DELETE /api/orders/:id
-// @access  Private/Admin
+// @route DELETE /api/orders/:id (Admin)
 const deleteOrder = async (req, res) => {
   try {
-    const order = await Orders.findByIdAndDelete(req.params.id);
+    const order = await Order.findByIdAndDelete(req.params.id);
     if (!order) return res.status(404).json({ message: 'Order not found' });
     res.json({ message: 'Order deleted' });
   } catch (error) {

@@ -1,55 +1,44 @@
 import { Cart } from '../models/Schema.js';
 
-// @desc    Get cart items for logged-in user
-// @route   GET /api/cart
-// @access  Private
+// @route GET /api/cart
 const getCart = async (req, res) => {
   try {
-    const cartItems = await Cart.find({ userId: req.user.id });
+    const cartItems = await Cart.find({ userId: req.user.id }).populate('productId');
     res.json(cartItems);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Add item to cart
-// @route   POST /api/cart
-// @access  Private
+// @route POST /api/cart
 const addToCart = async (req, res) => {
   try {
-    const { title, description, mainImg, size, quantity, price, discount } = req.body;
+    const { productId, quantity } = req.body;
+
+    // Check if item already in cart
+    const existing = await Cart.findOne({ userId: req.user.id, productId });
+    if (existing) {
+      existing.quantity += quantity || 1;
+      await existing.save();
+      return res.json(existing);
+    }
 
     const cartItem = await Cart.create({
       userId: req.user.id,
-      title,
-      description,
-      mainImg,
-      size,
-      quantity,
-      price,
-      discount,
+      productId,
+      quantity: quantity || 1
     });
-
     res.status(201).json(cartItem);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Update cart item quantity
-// @route   PUT /api/cart/:id
-// @access  Private
+// @route PUT /api/cart/:id
 const updateCartItem = async (req, res) => {
   try {
     const cartItem = await Cart.findById(req.params.id);
-
     if (!cartItem) return res.status(404).json({ message: 'Cart item not found' });
-
-    // Only owner can update
-    if (cartItem.userId !== req.user.id) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
-
     cartItem.quantity = req.body.quantity || cartItem.quantity;
     const updated = await cartItem.save();
     res.json(updated);
@@ -58,9 +47,7 @@ const updateCartItem = async (req, res) => {
   }
 };
 
-// @desc    Remove item from cart
-// @route   DELETE /api/cart/:id
-// @access  Private
+// @route DELETE /api/cart/:id
 const removeFromCart = async (req, res) => {
   try {
     const cartItem = await Cart.findByIdAndDelete(req.params.id);
@@ -71,9 +58,7 @@ const removeFromCart = async (req, res) => {
   }
 };
 
-// @desc    Clear entire cart for the user
-// @route   DELETE /api/cart/clear
-// @access  Private
+// @route DELETE /api/cart/clear
 const clearCart = async (req, res) => {
   try {
     await Cart.deleteMany({ userId: req.user.id });

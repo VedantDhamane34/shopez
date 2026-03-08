@@ -2,70 +2,61 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { User } from '../models/Schema.js';
 
-// Generate JWT token
-const generateToken = (id, usertype) => {
-  return jwt.sign({ id, usertype }, process.env.JWT_SECRET, {
-    expiresIn: '7d',
-  });
+const generateToken = (id, role) => {
+  return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
-// @desc    Register a new user
-// @route   POST /api/users/register
-// @access  Public
+// @route POST /api/users/register
 const registerUser = async (req, res) => {
   try {
-    const { username, email, password, usertype } = req.body;
+    const { name, email, password, role, phone, address } = req.body;
 
-    if (!username || !email || !password) {
-      return res.status(400).json({ message: 'Please fill all fields' });
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Please fill all required fields' });
     }
 
-    // Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
     const user = await User.create({
-      username,
+      name,
       email,
       password: hashedPassword,
-      usertype: usertype || 'user',
+      role: role || 'user',
+      phone,
+      address
     });
 
     res.status(201).json({
       _id: user._id,
-      username: user.username,
+      name: user.name,
       email: user.email,
-      usertype: user.usertype,
-      token: generateToken(user._id, user.usertype),
+      role: user.role,
+      token: generateToken(user._id, user.role)
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Login user
-// @route   POST /api/users/login
-// @access  Public
+// @route POST /api/users/login
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const user = await User.findOne({ email });
 
     if (user && (await bcrypt.compare(password, user.password))) {
       res.json({
         _id: user._id,
-        username: user.username,
+        name: user.name,
         email: user.email,
-        usertype: user.usertype,
-        token: generateToken(user._id, user.usertype),
+        role: user.role,
+        token: generateToken(user._id, user.role)
       });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
@@ -75,9 +66,7 @@ const loginUser = async (req, res) => {
   }
 };
 
-// @desc    Get logged-in user profile
-// @route   GET /api/users/profile
-// @access  Private
+// @route GET /api/users/profile
 const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
@@ -88,29 +77,29 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-// @desc    Update user profile
-// @route   PUT /api/users/profile
-// @access  Private
+// @route PUT /api/users/profile
 const updateUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    user.username = req.body.username || user.username;
-    user.email = req.body.email || user.email;
+    user.name    = req.body.name    || user.name;
+    user.email   = req.body.email   || user.email;
+    user.phone   = req.body.phone   || user.phone;
+    user.address = req.body.address || user.address;
 
     if (req.body.password) {
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(req.body.password, salt);
     }
 
-    const updatedUser = await user.save();
+    const updated = await user.save();
     res.json({
-      _id: updatedUser._id,
-      username: updatedUser.username,
-      email: updatedUser.email,
-      usertype: updatedUser.usertype,
-      token: generateToken(updatedUser._id, updatedUser.usertype),
+      _id:   updated._id,
+      name:  updated.name,
+      email: updated.email,
+      role:  updated.role,
+      token: generateToken(updated._id, updated.role)
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

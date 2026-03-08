@@ -1,23 +1,19 @@
-import { Product } from '../models/Schema.js';
+import { Product, Category } from '../models/Schema.js';
 
-// @desc    Get all products
-// @route   GET /api/products
-// @access  Public
+// @route GET /api/products
 const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find({});
+    const products = await Product.find({}).populate('categoryId', 'categoryName');
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Get single product by ID
-// @route   GET /api/products/:id
-// @access  Public
+// @route GET /api/products/:id
 const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate('categoryId', 'categoryName');
     if (!product) return res.status(404).json({ message: 'Product not found' });
     res.json(product);
   } catch (error) {
@@ -25,51 +21,33 @@ const getProductById = async (req, res) => {
   }
 };
 
-// @desc    Get products by category
-// @route   GET /api/products/category/:category
-// @access  Public
+// @route GET /api/products/category/:categoryId
 const getProductsByCategory = async (req, res) => {
   try {
-    const products = await Product.find({ category: req.params.category });
+    const products = await Product.find({ categoryId: req.params.categoryId });
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Add a new product (Admin only)
-// @route   POST /api/products
-// @access  Private/Admin
+// @route POST /api/products (Admin)
 const addProduct = async (req, res) => {
   try {
-    const { title, description, mainImg, carousel, sizes, category, gender, price, discount } = req.body;
-
+    const { name, description, price, stock, categoryId, rating, imageURL } = req.body;
     const product = await Product.create({
-      title,
-      description,
-      mainImg,
-      carousel,
-      sizes,
-      category,
-      gender,
-      price,
-      discount,
+      name, description, price, stock, categoryId, rating, imageURL
     });
-
     res.status(201).json(product);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Update a product (Admin only)
-// @route   PUT /api/products/:id
-// @access  Private/Admin
+// @route PUT /api/products/:id (Admin)
 const updateProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!product) return res.status(404).json({ message: 'Product not found' });
     res.json(product);
   } catch (error) {
@@ -77,24 +55,15 @@ const updateProduct = async (req, res) => {
   }
 };
 
-// @desc    Delete a product (Admin only)
-// @route   DELETE /api/products/:id
-// @access  Private/Admin
+// @route DELETE /api/products/:id (Admin)
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
-    res.json({ message: 'Product removed' });
+    res.json({ message: 'Product deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-export {
-  getAllProducts,
-  getProductById,
-  getProductsByCategory,
-  addProduct,
-  updateProduct,
-  deleteProduct,
-};
+export { getAllProducts, getProductById, getProductsByCategory, addProduct, updateProduct, deleteProduct };

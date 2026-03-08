@@ -1,20 +1,21 @@
 import express from 'express';
 import {
+  getDashboardStats,
   getAllUsers,
   deleteUser,
-  getAdminData,
-  updateAdminData,
-  getDashboardStats,
+  getAllCategories,
+  addCategory,
+  deleteCategory
 } from '../controllers/adminController.js';
 import { authMiddleware, adminMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// All admin routes require auth + admin role
-router.get('/users', authMiddleware, adminMiddleware, getAllUsers);
-router.delete('/users/:id', authMiddleware, adminMiddleware, deleteUser);
-router.get('/data', authMiddleware, adminMiddleware, getAdminData);
-router.put('/data', authMiddleware, adminMiddleware, updateAdminData);
-router.get('/stats', authMiddleware, adminMiddleware, getDashboardStats);
+router.get('/stats',          authMiddleware, adminMiddleware, getDashboardStats);
+router.get('/users',          authMiddleware, adminMiddleware, getAllUsers);
+router.delete('/users/:id',   authMiddleware, adminMiddleware, deleteUser);
+router.get('/categories',     authMiddleware, adminMiddleware, getAllCategories);
+router.post('/categories',    authMiddleware, adminMiddleware, addCategory);
+router.delete('/categories/:id', authMiddleware, adminMiddleware, deleteCategory);
 
 export default router;
