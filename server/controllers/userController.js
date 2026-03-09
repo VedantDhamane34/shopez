@@ -9,9 +9,9 @@ const generateToken = (id, role) => {
 // @route POST /api/users/register
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, role, phone, address } = req.body;
+    const { name, username, email, password, role, usertype, phone, address } = req.body;
 
-    if (!name || !email || !password) {
+    if ((!name && !username) || !email || !password) {
       return res.status(400).json({ message: 'Please fill all required fields' });
     }
 
@@ -24,10 +24,10 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const user = await User.create({
-      name,
+      name: name || username,
       email,
       password: hashedPassword,
-      role: role || 'user',
+      role: role || usertype || 'user',
       phone,
       address
     });
@@ -35,6 +35,7 @@ const registerUser = async (req, res) => {
     res.status(201).json({
       _id: user._id,
       name: user.name,
+      username: user.name,
       email: user.email,
       role: user.role,
       token: generateToken(user._id, user.role)
@@ -54,6 +55,7 @@ const loginUser = async (req, res) => {
       res.json({
         _id: user._id,
         name: user.name,
+        username: user.name,
         email: user.email,
         role: user.role,
         token: generateToken(user._id, user.role)

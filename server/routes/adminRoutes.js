@@ -17,5 +17,7 @@ router.delete('/users/:id',   authMiddleware, adminMiddleware, deleteUser);
 router.get('/categories',     authMiddleware, adminMiddleware, getAllCategories);
 router.post('/categories',    authMiddleware, adminMiddleware, addCategory);
 router.delete('/categories/:id', authMiddleware, adminMiddleware, deleteCategory);
+router.get('/data',  authMiddleware, adminMiddleware, getDashboardStats);
+router.put('/data',  authMiddleware, adminMiddleware, getDashboardStats);
 
 export default router;
