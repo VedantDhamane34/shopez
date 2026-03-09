@@ -3,28 +3,42 @@ import { Order, OrderItem, Payment } from '../models/Schema.js';
 // @route POST /api/orders
 const placeOrder = async (req, res) => {
   try {
-    const { totalPrice, paymentMethod, items } = req.body;
-
-    // Create order
-    const order = await Order.create({
-      userId: req.user.id,
+    const {
       totalPrice,
+      total,
+      paymentMethod,
+      items,
+      address,
+      name,
+      email,
+      mobile,
+      pincode
+    } = req.body;
+
+    const finalTotal = totalPrice || total || 0;
+
+    const order = await Order.create({
+      userId:        req.user.id,
+      totalPrice:    finalTotal,
       orderStatus:   'order placed',
-      paymentStatus: 'pending'
+      paymentStatus: 'pending',
+      address,
+      name,
+      email,
+      mobile,
+      pincode
     });
 
-    // Create order items
     if (items && items.length > 0) {
       const orderItems = items.map(item => ({
         orderId:   order._id,
-        productId: item.productId,
+        productId: item.productId || item._id,
         rating:    0,
         comment:   ''
       }));
       await OrderItem.insertMany(orderItems);
     }
 
-    // Create payment record
     await Payment.create({
       orderId:       order._id,
       paymentMethod: paymentMethod || 'COD',
