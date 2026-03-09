@@ -30,10 +30,15 @@ const productSchema = new Schema({
 });
 
 // ---- CART ----
-const cartSchema = new Schema({
-  userId:    { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-  quantity:  { type: Number, required: true, default: 1 }
+const cartSchema = new mongoose.Schema({
+  userId:    { type: String, required: true },
+  productId: { type: String },
+  title:     { type: String },
+  mainImg:   { type: String },
+  price:     { type: Number },
+  discount:  { type: Number, default: 0 },
+  size:      { type: String },
+  quantity:  { type: Number, default: 1 }
 });
 
 // ---- ORDER ----

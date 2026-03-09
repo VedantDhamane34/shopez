@@ -3,7 +3,7 @@ import { Cart } from '../models/Schema.js';
 // @route GET /api/cart
 const getCart = async (req, res) => {
   try {
-    const cartItems = await Cart.find({ userId: req.user.id }).populate('productId');
+    const cartItems = await Cart.find({ userId: req.user.id });
     res.json(cartItems);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -13,20 +13,28 @@ const getCart = async (req, res) => {
 // @route POST /api/cart
 const addToCart = async (req, res) => {
   try {
-    const { productId, quantity } = req.body;
+    const { productId, title, mainImg, price, discount, size, quantity } = req.body;
 
-    // Check if item already in cart
-    const existing = await Cart.findOne({ userId: req.user.id, productId });
+    const existing = await Cart.findOne({ 
+      userId: req.user.id, 
+      productId: productId || title 
+    });
+    
     if (existing) {
-      existing.quantity += quantity || 1;
+      existing.quantity = Number(existing.quantity) + Number(quantity || 1);
       await existing.save();
       return res.json(existing);
     }
 
     const cartItem = await Cart.create({
-      userId: req.user.id,
-      productId,
-      quantity: quantity || 1
+      userId:    req.user.id,
+      productId: productId || title,
+      title,
+      mainImg,
+      price,
+      discount:  discount || 0,
+      size,
+      quantity:  quantity || 1
     });
     res.status(201).json(cartItem);
   } catch (error) {
