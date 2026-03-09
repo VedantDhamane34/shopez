@@ -34,7 +34,15 @@ const getProductsByCategory = async (req, res) => {
 // @route POST /api/products (Admin)
 const addProduct = async (req, res) => {
   try {
-    const { name, description, price, stock, categoryId, rating, imageURL } = req.body;
+    const data = req.body;
+    
+    // Handle both single product and array of products
+    if (Array.isArray(data)) {
+      const products = await Product.insertMany(data);
+      return res.status(201).json(products);
+    }
+    
+    const { name, description, price, stock, categoryId, rating, imageURL } = data;
     const product = await Product.create({
       name, description, price, stock, categoryId, rating, imageURL
     });
